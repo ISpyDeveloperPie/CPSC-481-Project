@@ -1,10 +1,10 @@
 #include <iostream>
 #include "main.h"
 
-void create_map(int width, int height, std::vector<obstacle> obs) 
+node* create_map(int width, int height, std::vector<obstacle> obs, int start_x, int start_y, int goal_x, int goal_y) 
 {
     map_grid.resize(height, std::vector<node*>(width, nullptr));
-
+    node* start_node = nullptr;
     std::cout << "\n\n----------------------" << std::endl;
     for (int x = 0; x < height; ++x) 
     {
@@ -36,12 +36,21 @@ void create_map(int width, int height, std::vector<obstacle> obs)
                     map_grid[x][y - 1]->neighbors.push_back(newNode);
                 }
                 map_grid[x][y] = newNode;
+                if (x == start_x && y == start_y) 
+                {
+                    start_node = newNode;
+                }
+                else if (x == goal_x && y == goal_y) 
+                {
+                    node::goal_node = newNode;
+                }
             }
         }
         std::cout << std::endl;
     }
     std::cout << "----------------------\n\n" << std::endl; 
     std::cout << "Map created!" << std::endl; 
+    return start_node;
 }
 
 int main() 
@@ -52,6 +61,7 @@ int main()
     auto obs2 = obstacle(3, 0, 3, 4);
     obstacles.push_back(obs1);
     obstacles.push_back(obs2);
-    create_map(10, 10, obstacles);
+    auto start = create_map(10, 10, obstacles, 0, 0, 9, 9);
+    AStar::get_path(map_grid[0][0], map_grid[9][9]);
     return 0;
 }
