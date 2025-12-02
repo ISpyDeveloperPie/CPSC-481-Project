@@ -68,6 +68,14 @@ public:
                 }
             }
         }
+        std::vector<node*> path;
+        node* step = goal;
+        while (step != nullptr)
+        {
+            path.push_back(step);
+            step = step->previous;
+        }
+        return path;
     }
 };
 

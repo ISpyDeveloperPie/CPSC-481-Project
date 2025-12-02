@@ -1,6 +1,13 @@
 #include <iostream>
 #include "main.h"
 
+node* node::goal_node = nullptr;
+
+int global_width = 0;
+int global_height = 0;
+
+// -- MAP CREATION -- //
+
 node* create_map(int width, int height, std::vector<obstacle> obs, int start_x, int start_y, int goal_x, int goal_y) 
 {
     map_grid.resize(height, std::vector<node*>(width, nullptr));
@@ -50,8 +57,69 @@ node* create_map(int width, int height, std::vector<obstacle> obs, int start_x, 
     }
     std::cout << "----------------------\n\n" << std::endl; 
     std::cout << "Map created!" << std::endl; 
+    global_height = height;
+    global_width = width;
     return start_node;
 }
+
+// -- PATH PRINTING -- //
+
+void print_path(const std::vector<node*>& path) 
+{
+    for (int i = path.size() - 1; i >= 0; i--)
+    {
+        auto n = path[i];
+        std::cout << "(" << n->x << ", " << n->y << ") -> ";
+    }
+    std::cout << "GOAL\n\n" << std::endl;
+
+    for (int x = 0; x < global_height; ++x) 
+    {
+        for (int y = 0; y < global_width; ++y) 
+        {
+            bool on_path = false;
+            for (auto p_node : path) 
+            {
+                if (p_node->x == y && p_node->y == x) 
+                {
+                    on_path = true;
+                    break;
+                }
+            }
+            if (on_path) 
+            {
+                std::cout << "🟩";
+            } 
+            else 
+            {
+                bool is_obstacle = true;
+                for (auto p_node : path) 
+                {
+                    if (map_grid[x][y] == p_node) 
+                    {
+                        is_obstacle = false;
+                        break;
+                    }
+                }
+                if (is_obstacle && map_grid[x][y] == nullptr) 
+                {
+                    std::cout << "⬛";
+                } 
+                else 
+                {
+                    std::cout << "⬜";
+                }
+            }
+        }
+        std::cout << std::endl;
+    }
+}
+
+// -- TURN-BASED FOV -- //
+
+
+
+// -- MAIN FUNCTION -- //
 
 int main() 
 {
@@ -61,7 +129,10 @@ int main()
     auto obs2 = obstacle(3, 0, 3, 4);
     obstacles.push_back(obs1);
     obstacles.push_back(obs2);
-    auto start = create_map(10, 10, obstacles, 0, 0, 9, 9);
-    AStar::get_path(map_grid[0][0], map_grid[9][9]);
+    int goal_x = 9;
+    int goal_y = 9;
+    auto start = create_map(10, 10, obstacles, 0, 0, goal_x, goal_y);
+    auto path = AStar::get_path(map_grid[0][0], map_grid[goal_x][goal_y]);
+    print_path(path);
     return 0;
 }
