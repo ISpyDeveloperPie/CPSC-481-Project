@@ -221,6 +221,64 @@ public:
 
         return intersections;
     }
+
+    // Helper function to find intersection between two line segments
+    inline bool segmentSegmentIntersection(const vector2d& p1, const vector2d& p2, 
+                                        const vector2d& p3, const vector2d& p4, 
+                                        vector2d& out)
+    {
+        vector2d s1 = p2 - p1;
+        vector2d s2 = p4 - p3;
+        
+        float denom = (-s2.x * s1.y + s1.x * s2.y);
+        if (fabs(denom) < 1e-6) return false; // Parallel or collinear
+        
+        float s = (-s1.y * (p1.x - p3.x) + s1.x * (p1.y - p3.y)) / denom;
+        float t = ( s2.x * (p1.y - p3.y) - s2.y * (p1.x - p3.x)) / denom;
+        
+        if (s >= 0.0f && s <= 1.0f && t >= 0.0f && t <= 1.0f)
+        {
+            out = p1 + s1 * t;
+            return true;
+        }
+        
+        return false;
+    }
+
+    inline std::vector<vector2d> nodeLineIntersections(const path_node* n, float line_length)
+    {
+        std::vector<vector2d> intersections;
+        
+        // Create line from current position in the direction we're facing
+        vector2d line_start = n->position;
+        vector2d line_end = n->position + (n->direction * line_length);
+        
+        // Define voxel corners (node is 1×1 tile)
+        vector2d p1 = { float(n->parent_node->x),     float(n->parent_node->y)     };
+        vector2d p2 = { float(n->parent_node->x + 1), float(n->parent_node->y)     };
+        vector2d p3 = { float(n->parent_node->x + 1), float(n->parent_node->y + 1) };
+        vector2d p4 = { float(n->parent_node->x),     float(n->parent_node->y + 1) };
+        
+        vector2d out;
+        
+        // Edge 1: p1 → p2
+        if (segmentSegmentIntersection(line_start, line_end, p1, p2, out))
+            intersections.push_back(out);
+        
+        // Edge 2: p2 → p3
+        if (segmentSegmentIntersection(line_start, line_end, p2, p3, out))
+            intersections.push_back(out);
+        
+        // Edge 3: p3 → p4
+        if (segmentSegmentIntersection(line_start, line_end, p3, p4, out))
+            intersections.push_back(out);
+        
+        // Edge 4: p4 → p1
+        if (segmentSegmentIntersection(line_start, line_end, p4, p1, out))
+            intersections.push_back(out);
+        
+        return intersections;
+    }
 };
 
 
@@ -268,6 +326,7 @@ public:
             vector2d circle_pos2 = current->position + (current->direction.perpendicular(1).normalize() * radius);
             auto intersections_1 = current->nodeCircleIntersections(current, circle_pos1, radius);
             auto intersections_2 = current->nodeCircleIntersections(current, circle_pos2, radius);
+            auto line_intersections = current->nodeLineIntersections(current, 1.0f);
 
             for (auto inter : intersections_1)
             {
@@ -293,6 +352,19 @@ public:
                 {
                     new_dir = new_dir * -1.0f;
                 }
+                inter = inter + new_dir * 0.01f; // nudge a bit to avoid sticking exactly on corners
+                if (int(inter.y) >= 0 && int(inter.y) < map_grid.size() &&
+                    int(inter.x) >= 0 && int(inter.x) < map_grid[0].size())
+                {
+                    auto new_pathnode = new path_node(inter, new_dir, map_grid[int(inter.y)][int(inter.x)]);
+                    new_pathnode->previous = current;
+                    current->neighbors.push_back(new_pathnode);
+                }
+            }
+
+            for (auto inter : line_intersections)
+            {
+                vector2d new_dir = current->direction;
                 inter = inter + new_dir * 0.01f; // nudge a bit to avoid sticking exactly on corners
                 if (int(inter.y) >= 0 && int(inter.y) < map_grid.size() &&
                     int(inter.x) >= 0 && int(inter.x) < map_grid[0].size())
