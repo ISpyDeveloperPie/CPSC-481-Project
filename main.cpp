@@ -2,6 +2,7 @@
 #include "main.h"
 
 node* node::goal_node = nullptr;
+node* start_node = nullptr;
 std::vector<std::vector<node*>> map_grid;
 std::vector<std::vector<node*>> fov_grid;
 
@@ -25,13 +26,13 @@ node* create_map(int width, int height, std::vector<obstacle> obs, int start_x, 
             {
                 if (y >= obs.x && y < obs.x + obs.width && x >= obs.y && x < obs.y + obs.height) 
                 {
-                    std::cout << "⬛";
+                    //std::cout << "⬛";
                     skip = true;
                 }
             }
             if (!skip)
             {
-                std::cout << "⬜";
+                //std::cout << "⬜";
                 node* newNode = new node();
                 newNode->x = x;
                 newNode->y = y;
@@ -91,7 +92,14 @@ void print_path(const std::vector<node*>& path)
             }
             if (on_path && map_grid[y][x] != node::goal_node) 
             {
-                std::cout << "\x1b[32m██\x1b[0m";
+                if (map_grid[y][x] != start_node)
+                {
+                    std::cout << "\x1b[32m██\x1b[0m";
+                } 
+                else 
+                {
+                    std::cout << "\x1b[33m██\x1b[0m";
+                }
             } 
             else 
             {
@@ -137,12 +145,14 @@ int main()
     std::cout << "Hello, World!" << std::endl; 
     std::vector<obstacle> obstacles;
     auto obs1 = obstacle(0, 3, 2, 2);
-    //auto obs2 = obstacle(3, 0, 3, 4);
+    auto obs2 = obstacle(0, 4, 5, 2);
     obstacles.push_back(obs1);
-    //obstacles.push_back(obs2);
+    obstacles.push_back(obs2);
     int goal_x = 9;
     int goal_y = 3;
     auto start = create_map(10, 10, obstacles, 0, 0, goal_x, goal_y);
+    start_node = start;
+    print_path(std::vector<node*>{start});
     path_node* start_pathnode = new path_node(vector2d(start->x, start->y), vector2d(0,1), map_grid[0][0]);
     path_node* goal_pathnode = new path_node(vector2d(node::goal_node->x, node::goal_node->y), vector2d(0,0), map_grid[goal_y][goal_x]);
     fov_grid[start->y][start->x] = start;
