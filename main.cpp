@@ -1,4 +1,5 @@
 #include <iostream>
+#include <chrono>
 #include "main.h"
 
 node* node::goal_node = nullptr;
@@ -156,7 +157,11 @@ int main()
     path_node* start_pathnode = new path_node(vector2d(start->x, start->y), vector2d(0,1), map_grid[0][0]);
     path_node* goal_pathnode = new path_node(vector2d(node::goal_node->x, node::goal_node->y), vector2d(0,0), map_grid[goal_y][goal_x]);
     fov_grid[start->y][start->x] = start;
+    auto start_time = std::chrono::high_resolution_clock::now();
     auto path = AStar::get_path(start_pathnode, goal_pathnode);
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
+    std::cout << "Pathfinding took: " << duration << " microseconds" << std::endl;
     print_path(path);
     std::cout << "EXIT NOW" << std::endl;
     return 0;
