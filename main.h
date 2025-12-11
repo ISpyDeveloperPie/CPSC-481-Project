@@ -297,7 +297,7 @@ public:
 class AStar
 {
 public:
-    inline static std::vector<node*> get_path(path_node* start_pathnode, path_node* goal_pathnode)//?(node* start, node* goal)
+    inline static std::vector<node*> get_path(path_node* start_pathnode, path_node* goal_pathnode, float radius)//?(node* start, node* goal)
     {
         std::priority_queue<path_node*, std::vector<path_node*>, AStarComparator> frontier;
         std::unordered_set<node*> explored;
@@ -321,7 +321,6 @@ public:
             frontier.pop();
             explored.insert(current->parent_node);
             // get neighbors
-            float radius = 5.5f;
             vector2d circle_pos1 = current->position + (current->direction.perpendicular(0).normalize() * radius);
             vector2d circle_pos2 = current->position + (current->direction.perpendicular(1).normalize() * radius);
             auto intersections_1 = current->nodeCircleIntersections(current, circle_pos1, radius);
@@ -337,7 +336,7 @@ public:
                 }
                 inter = inter + new_dir * 0.01f; // nudge a bit to avoid sticking exactly on corners
                 if (int(inter.y) >= 0 && int(inter.y) < map_grid.size() &&
-                    int(inter.x) >= 0 && int(inter.x) < map_grid[0].size())
+                    int(inter.x) >= 0 && int(inter.x) < map_grid[0].size() && (inter - current->position).normalize().dot(current->direction) > 0)
                 {
                     auto new_pathnode = new path_node(inter, new_dir, map_grid[int(inter.y)][int(inter.x)]);
                     new_pathnode->previous = current;
@@ -354,7 +353,7 @@ public:
                 }
                 inter = inter + new_dir * 0.01f; // nudge a bit to avoid sticking exactly on corners
                 if (int(inter.y) >= 0 && int(inter.y) < map_grid.size() &&
-                    int(inter.x) >= 0 && int(inter.x) < map_grid[0].size())
+                    int(inter.x) >= 0 && int(inter.x) < map_grid[0].size() && (inter - current->position).normalize().dot(current->direction) > 0)
                 {
                     auto new_pathnode = new path_node(inter, new_dir, map_grid[int(inter.y)][int(inter.x)]);
                     new_pathnode->previous = current;
@@ -367,7 +366,7 @@ public:
                 vector2d new_dir = current->direction;
                 inter = inter + new_dir * 0.01f; // nudge a bit to avoid sticking exactly on corners
                 if (int(inter.y) >= 0 && int(inter.y) < map_grid.size() &&
-                    int(inter.x) >= 0 && int(inter.x) < map_grid[0].size())
+                    int(inter.x) >= 0 && int(inter.x) < map_grid[0].size() && (inter - current->position).normalize().dot(current->direction) > 0)
                 {
                     auto new_pathnode = new path_node(inter, new_dir, map_grid[int(inter.y)][int(inter.x)]);
                     new_pathnode->previous = current;

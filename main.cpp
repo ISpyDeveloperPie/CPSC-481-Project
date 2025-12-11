@@ -1,6 +1,7 @@
 #include <iostream>
 #include <chrono>
 #include "main.h"
+#include <windows.h>
 
 node* node::goal_node = nullptr;
 node* start_node = nullptr;
@@ -143,22 +144,26 @@ void print_path(const std::vector<node*>& path)
 
 int main() 
 {
+
     std::cout << "Hello, World!" << std::endl; 
     std::vector<obstacle> obstacles;
     auto obs1 = obstacle(0, 3, 2, 2);
-    auto obs2 = obstacle(0, 4, 5, 2);
+    auto obs2 = obstacle(0, 4, 6, 2);
     obstacles.push_back(obs1);
     obstacles.push_back(obs2);
     int goal_x = 9;
-    int goal_y = 3;
-    auto start = create_map(10, 10, obstacles, 0, 0, goal_x, goal_y);
+    int goal_y = 5;
+    vector2d start_pos(0, 2);
+    vector2d start_dir(0, 1);
+    auto start = create_map(10, 10, obstacles, start_pos.x, start_pos.y, goal_x, goal_y);
     start_node = start;
     print_path(std::vector<node*>{start});
-    path_node* start_pathnode = new path_node(vector2d(start->x, start->y), vector2d(0,1), map_grid[0][0]);
+    path_node* start_pathnode = new path_node(vector2d(start->x, start->y), start_dir, map_grid[start_pos.y][start_pos.x]);
     path_node* goal_pathnode = new path_node(vector2d(node::goal_node->x, node::goal_node->y), vector2d(0,0), map_grid[goal_y][goal_x]);
     fov_grid[start->y][start->x] = start;
     auto start_time = std::chrono::high_resolution_clock::now();
-    auto path = AStar::get_path(start_pathnode, goal_pathnode);
+    float radius = 5.5f;
+    auto path = AStar::get_path(start_pathnode, goal_pathnode, radius);
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
     std::cout << "Pathfinding took: " << duration << " microseconds" << std::endl;
